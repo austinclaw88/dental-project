@@ -1,0 +1,26 @@
+{
+  "name": "@nightshift/connector",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/main.ts",
+  "scripts": {
+    "dev": "tsx src/main.ts",
+    "start": "tsx src/main.ts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@nightshift/db": "*",
+    "@nightshift/od-sim": "*",
+    "@nightshift/schema": "*",
+    "pg": "^8.12.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/pg": "^8.11.0",
+    "tsx": "^4.16.0",
+    "typescript": "^5.5.0",
+    "vitest": "^2.0.0"
+  }
+}
