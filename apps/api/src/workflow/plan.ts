@@ -62,13 +62,16 @@ export async function runBatch(deps: Deps, practiceId: string, date: string): Pr
       cdtCodes: (row.cdt_codes as string[]) ?? [],
     };
 
-    const existing = await query(
-      `select 1 from verification
-        where coverage_id=$1 and appt_date=$2::date and status='DONE' and superseded_by is null limit 1`,
+    // Idempotent re-runs: skip if any live (non-superseded) verification exists
+    // for this coverage+date, unless everything live has FAILED — only failures
+    // get re-attempted, and the new attempt supersedes them.
+    const existing = await query<{ id: string; status: string }>(
+      `select id, status from verification
+        where coverage_id=$1 and appt_date=$2::date and superseded_by is null`,
       [cand.coverageId, date],
       deps.pool,
     );
-    if (existing.length) continue;
+    if (existing.some((e) => e.status !== "FAILED")) continue;
 
     const scope = planScope(cand.lastVerifiedAt, cand.cdtCodes);
     const v = await one<{ id: string }>(
@@ -77,6 +80,13 @@ export async function runBatch(deps: Deps, practiceId: string, date: string): Pr
       [practiceId, cand.coverageId, cand.appointmentId, date, scope],
       deps.pool,
     );
+    if (existing.length) {
+      await query(
+        `update verification set superseded_by=$1 where coverage_id=$2 and appt_date=$3::date and id <> $1 and superseded_by is null`,
+        [v.id, cand.coverageId, date],
+        deps.pool,
+      );
+    }
     await enqueueJob(deps, "verify_patient", { verificationId: v.id });
     planned++;
   }

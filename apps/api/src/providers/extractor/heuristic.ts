@@ -134,7 +134,7 @@ function applyPortal(b: BenefitBreakdown, cap: RawCapture) {
   $("table").each((_i, table) => {
     const rows = $(table).find("tr").toArray();
     const headerText = rows[0] ? $(rows[0]).text().toLowerCase() : "";
-    const isFreqTable = /limit|frequen/.test(headerText) && /used/.test(headerText);
+    const isFreqTable = /service|procedure/.test(headerText) && /limit|frequen/.test(headerText);
     if (isFreqTable) {
       const headers = $(rows[0])
         .find("th,td")
@@ -142,8 +142,9 @@ function applyPortal(b: BenefitBreakdown, cap: RawCapture) {
         .map((c) => $(c).text().trim().toLowerCase());
       const colService = headers.findIndex((h) => /service|procedure|benefit/.test(h));
       const colLimit = headers.findIndex((h) => /limit|frequen/.test(h));
-      const colUsed = headers.findIndex((h) => /used/.test(h));
-      const colLast = headers.findIndex((h) => /last|date/.test(h));
+      // "History" columns carry both used-count and last-service ("Used 1 (last 01/15/2026)")
+      const colUsed = headers.findIndex((h) => /used|history|util/.test(h));
+      const colLast = headers.findIndex((h) => /last|date|history/.test(h));
       for (const r of rows.slice(1)) {
         const cells = $(r).find("td,th").toArray().map((c) => $(c).text().trim());
         if (cells.length < 2) continue;
@@ -159,6 +160,18 @@ function applyPortal(b: BenefitBreakdown, cap: RawCapture) {
       }
       return;
     }
+    // Columnar table (one header row of labels + one row of values, e.g. the
+    // Delta "Maximums & Deductibles" grid) → zip header[i] onto value[i].
+    if (rows.length === 2) {
+      const head = $(rows[0]).find("th,td").toArray().map((c) => $(c).text().trim());
+      const vals = $(rows[1]).find("th,td").toArray().map((c) => $(c).text().trim());
+      if (head.length >= 3 && head.length === vals.length) {
+        for (let i = 0; i < head.length; i++) {
+          if (head[i] && vals[i]) pairs.push({ label: head[i], value: vals[i] });
+        }
+        return;
+      }
+    }
     // generic 2-column table → label/value pairs
     for (const r of rows) {
       const cells = $(r).find("td,th").toArray();
@@ -169,7 +182,26 @@ function applyPortal(b: BenefitBreakdown, cap: RawCapture) {
     }
   });
 
-  // definition-list / labelled div fallback
+  // definition lists (<dt>/<dd>) — MetLife-style portals render kv data this way
+  $("dt").each((_i, dt) => {
+    const dd = $(dt).next("dd");
+    const label = $(dt).text().trim();
+    const value = dd.length ? dd.text().trim() : "";
+    if (label && value) pairs.push({ label, value });
+  });
+
+  // labelled chip/tile pairs (a small element holding exactly a label div and a
+  // value div, e.g. MetLife's coverage-class chips: "Type II — Basic" / "70%")
+  $("div, li, span").each((_i, el) => {
+    const kids = $(el).children().toArray();
+    if (kids.length !== 2) return;
+    const label = $(kids[0]).text().trim();
+    const value = $(kids[1]).text().trim();
+    if (!label || !value || label.length > 60) return;
+    if (/^[\d$][\d$,.%\s]*%?$/.test(value)) pairs.push({ label, value });
+  });
+
+  // labelled div fallback
   $("[data-field]").each((_i, el) => {
     pairs.push({ label: $(el).attr("data-field") ?? "", value: $(el).text().trim() });
   });
@@ -177,8 +209,17 @@ function applyPortal(b: BenefitBreakdown, cap: RawCapture) {
   for (const p of pairs) applyPair(b, p, source, artifactId);
 
   // Footnotes / notes (downgrades, missing-tooth, sparse markers).
-  const noteText = $(".footnotes, .notes, .note, footer, p").text();
+  const noteText = $(".footnotes, .notes, .note, .fn, .muted, .disclaimer, footer, p, div")
+    .toArray()
+    .map((el) => $(el).children().length === 0 ? $(el).text() : "")
+    .join(" ");
   applyNotes(b, noteText, source, artifactId);
+  // "Deductible applies to: basic, major" rendered as free text
+  const appliesM = $.text().match(/deductible applies to:?\s*([a-z,& ]+)/i);
+  if (appliesM) {
+    const cats = parseCategories(appliesM[1]);
+    if (cats.length) setFv(b.deductible.appliesTo, cats, source, artifactId, "deductible applies to");
+  }
   handleSparse(b, cap.content + " " + noteText);
 }
 
@@ -224,31 +265,37 @@ function applyPair(b: BenefitBreakdown, p: Pair, source: FieldSource, artifactId
     if (/terminat/i.test(v) && term) setFv(b.planStatus.terminationDate, term, source, artifactId, loc);
     return;
   }
-  if (/effective|member since|coverage begin|benefit begin/.test(l)) {
+  if (/effective|\beff\b|member since|coverage begin|benefit begin/.test(l)) {
     const d = toIsoDate(v);
     if (d) setFv(b.planStatus.effectiveDate, d, source, artifactId, loc);
     return;
   }
-  if (/plan year|benefit year|plan period/.test(l)) {
+  if (/plan year|benefit year|benefit yr|plan yr|plan period/.test(l)) {
     const py = planYear(v);
     if (py) setFv(b.planStatus.planYearStart, py, source, artifactId, loc);
     return;
   }
 
-  // waiting period (must precede the category rules — label may contain "major")
-  if (/waiting/.test(l)) {
-    const cat = /major/.test(l)
+  // waiting period (must precede the category rules — label may contain "major").
+  // Two shapes: label contains "waiting" (kv style) OR label is the category and
+  // the VALUE contains "waiting" (Delta's "Category | Detail" table:
+  // "Major | 12 mo waiting period, member effective 03/01/2026 (eligible 03/01/2027)").
+  if (/waiting/.test(l) || /waiting/i.test(v)) {
+    const hay = `${l} ${v.toLowerCase()}`;
+    const cat = /major/.test(hay)
       ? "major"
-      : /basic/.test(l)
+      : /basic/.test(hay)
         ? "basic"
-        : /prevent/.test(l)
+        : /prevent/.test(hay)
           ? "preventive"
-          : /ortho/.test(l)
+          : /ortho/.test(hay)
             ? "ortho"
             : null;
     if (cat) {
-      const endsOn = toIsoDate(v);
-      const months = (v.match(/(\d+)\s*month/i) ?? [])[1];
+      // prefer the explicit eligibility date ("(eligible 03/01/2027)") over the effective date
+      const eligible = v.match(/eligible[^0-9]*([\d/-]+)/i);
+      const endsOn = eligible ? toIsoDate(eligible[1]) : toIsoDate(v);
+      const months = (v.match(/(\d+)\s*mo(nth)?s?\b/i) ?? [])[1];
       const prov = { source, artifactId, locator: loc, retrievedAt: now() };
       b.waitingPeriods.push({
         category: cat as "preventive" | "basic" | "major" | "ortho",
@@ -261,6 +308,40 @@ function applyPair(b: BenefitBreakdown, p: Pair, source: FieldSource, artifactId
         endsOn: { value: endsOn, provenance: endsOn ? prov : null, confidence: "high", unavailableReason: null },
       });
     }
+    return;
+  }
+
+  // frequency rendered as a plain pair (MetLife: "Prophy | 2 per calendar_year")
+  if (
+    /prophy|bitewing|bwx|fmx|full mouth|\bexam\b|\beval\b|srp|scaling|root plan|fluoride/.test(l) &&
+    /\bper\b|\/\s*(cy|py)\b|\/\s*\d+\s*mo/i.test(v)
+  ) {
+    const usedM = v.match(/used\s*(\d+)/i);
+    const lastM = v.match(/last[^0-9]*([\d/-]+)/i);
+    const freq = parseFrequency(p.label, v.split(",")[0], usedM ? usedM[1] : "", lastM ? lastM[1] : "", source, artifactId);
+    if (freq) upsertFrequency(b, freq);
+    return;
+  }
+
+  // plan provisions
+  if (/missing tooth/.test(l)) {
+    const applies = /yes|applies/i.test(v) && !/not|no\b/i.test(v);
+    setFv(b.missingToothClause, applies, source, artifactId, loc);
+    return;
+  }
+  if (/coordination|\bcob\b/.test(l)) {
+    const rule = /non.?dup/i.test(v)
+      ? "non_duplication"
+      : /maintenance/i.test(v)
+        ? "maintenance_of_benefits"
+        : /standard/i.test(v)
+          ? "standard"
+          : null;
+    if (rule) setFv(b.cobRule, rule, source, artifactId, loc);
+    return;
+  }
+  if (/assignment/.test(l)) {
+    setFv(b.assignmentOfBenefits, /accept|yes/i.test(v), source, artifactId, loc);
     return;
   }
 
@@ -278,6 +359,12 @@ function applyPair(b: BenefitBreakdown, p: Pair, source: FieldSource, artifactId
   if (/max/.test(l)) {
     const n = money(v);
     if (n != null) setFv(b.annualMaximum.total, n, source, artifactId, loc);
+    return;
+  }
+  // "Benefits Used $95" (no "max" in the label)
+  if (/\bused\b|applied/.test(l) && !/ded/.test(l)) {
+    const n = money(v);
+    if (n != null) setFv(b.annualMaximum.used, n, source, artifactId, loc);
     return;
   }
 
@@ -391,7 +478,7 @@ function upsertFrequency(b: BenefitBreakdown, freq: FrequencyLimitation) {
 
 function applyNotes(b: BenefitBreakdown, text: string, source: FieldSource, artifactId: string | null) {
   const prov = { source, artifactId, locator: "footnote", retrievedAt: now() };
-  if (/posterior composit|composite.*amalgam|amalgam/i.test(text)) {
+  if (/posterior composit|composite.*amalgam|amalgam/i.test(text) && !b.downgrades.some((d) => d.key === "posterior_composite_to_amalgam")) {
     b.downgrades.push({
       key: "posterior_composite_to_amalgam",
       description: {
@@ -403,7 +490,7 @@ function applyNotes(b: BenefitBreakdown, text: string, source: FieldSource, arti
       applies: { value: true, provenance: prov, confidence: "medium", unavailableReason: null },
     });
   }
-  if (/base metal|pfm.*base|crown material/i.test(text)) {
+  if (/base.?metal|pfm.*base|crown material/i.test(text) && !b.downgrades.some((d) => d.key === "crown_pfm_to_base_metal")) {
     b.downgrades.push({
       key: "crown_pfm_to_base_metal",
       description: {
@@ -423,7 +510,7 @@ function applyNotes(b: BenefitBreakdown, text: string, source: FieldSource, arti
 
 /** MetLife-style sparse portal: fields the payer does not publish (PRD R8). */
 function handleSparse(b: BenefitBreakdown, fullText: string) {
-  if (!/not published|not available (from|via)|sparse|omit/i.test(fullText)) return;
+  if (!/not published|not available|sparse|omit/i.test(fullText)) return;
   const reason = "not published by payer portal";
   markUnavailable(b.deductible.family, reason);
   markUnavailable(b.deductible.familyMet, reason);
