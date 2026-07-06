@@ -1,4 +1,5 @@
 import { createReadStream } from "node:fs";
+import cors from "@fastify/cors";
 import Fastify, { type FastifyInstance } from "fastify";
 import { audit, one, query } from "@nightshift/db";
 import { BenefitBreakdown, ConnectorSyncRequest } from "@nightshift/schema";
@@ -64,6 +65,9 @@ async function exceptionsFor(deps: Deps, verificationId: string): Promise<ExRow[
 
 export function buildServer(deps: Deps): FastifyInstance {
   const app = Fastify({ logger: false });
+  // Dashboard runs on its own origin in dev (:3000 → :4000). Dev-permissive;
+  // production locks this to the deployed dashboard origin.
+  void app.register(cors, { origin: true });
 
   const handlers = {
     verify_patient: {
