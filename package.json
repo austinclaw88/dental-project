@@ -1,0 +1,23 @@
+{
+  "name": "nightshift",
+  "private": true,
+  "version": "0.1.0",
+  "description": "NightShift — AI insurance verification & benefits intelligence agent for OpenDental practices (MVP)",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "migrate": "npm run -w @nightshift/db migrate",
+    "seed:odsim": "npm run -w @nightshift/od-sim seed",
+    "dev:api": "npm run -w @nightshift/api dev",
+    "dev:portal": "npm run -w @nightshift/mock-portal dev",
+    "dev:connector": "npm run -w @nightshift/connector dev",
+    "dev:dashboard": "npm run -w @nightshift/dashboard dev",
+    "demo": "bash scripts/demo.sh",
+    "test": "npm run test --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

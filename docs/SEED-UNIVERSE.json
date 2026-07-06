@@ -1,0 +1,113 @@
+{
+  "$comment": "Single source of truth for dev/demo data. apps/od-sim seeds practice data from this; apps/mock-portal renders payer-side data from this; tests assert against it. Appointment times are practice-local (America/Chicago) on the demo date (tomorrow at seed time).",
+  "practice": {
+    "id": "11111111-1111-1111-1111-111111111111",
+    "name": "Cedar Park Dental Studio",
+    "tz": "America/Chicago"
+  },
+  "portalCredentials": { "username": "office@cedarpark.example", "password": "verify123!" },
+  "plans": {
+    "mock-delta/GRP-ACME": {
+      "carrierName": "Delta Dental MockState",
+      "employer": "Acme Fabrication Inc",
+      "annualMax": 1500, "dedIndividual": 50, "dedFamily": 150, "dedAppliesTo": ["basic", "major"],
+      "coverage": { "preventive": 100, "basic": 80, "major": 50, "ortho": 0 },
+      "planYearStart": "calendar",
+      "frequencies": { "prophylaxis": "2 per calendar_year", "bitewings": "1 per calendar_year", "exam": "2 per calendar_year", "fmx": "1 per 60 months" },
+      "waitingPeriodsMonths": {},
+      "downgrades": ["posterior_composite_to_amalgam"],
+      "missingToothClause": true,
+      "cobRule": "standard"
+    },
+    "mock-delta/GRP-TECHCO": {
+      "carrierName": "Delta Dental MockState",
+      "employer": "TechCo Systems LLC",
+      "annualMax": 2000, "dedIndividual": 75, "dedFamily": 225, "dedAppliesTo": ["basic", "major"],
+      "coverage": { "preventive": 100, "basic": 90, "major": 60, "ortho": 50 },
+      "planYearStart": "07-01",
+      "frequencies": { "prophylaxis": "2 per plan_year", "bitewings": "2 per plan_year", "exam": "2 per plan_year", "fmx": "1 per 36 months" },
+      "waitingPeriodsMonths": { "major": 12 },
+      "downgrades": ["crown_pfm_to_base_metal"],
+      "missingToothClause": false,
+      "cobRule": "non_duplication"
+    },
+    "mock-delta/GRP-SCHOOL": {
+      "carrierName": "Delta Dental MockState",
+      "employer": "Cedar Park ISD",
+      "annualMax": 1250, "dedIndividual": 50, "dedFamily": 150, "dedAppliesTo": ["basic", "major"],
+      "coverage": { "preventive": 100, "basic": 80, "major": 50, "ortho": 50 },
+      "planYearStart": "09-01",
+      "frequencies": { "prophylaxis": "2 per plan_year", "bitewings": "1 per plan_year", "exam": "2 per plan_year", "fmx": "1 per 60 months" },
+      "waitingPeriodsMonths": {},
+      "downgrades": [],
+      "missingToothClause": true,
+      "cobRule": "standard"
+    },
+    "mock-metlife/GRP-ACME": {
+      "carrierName": "MetLife Mock",
+      "employer": "Acme Fabrication Inc",
+      "annualMax": 1000, "dedIndividual": 50, "dedFamily": null, "dedAppliesTo": ["basic", "major"],
+      "coverage": { "preventive": 100, "basic": 70, "major": 50, "ortho": 0 },
+      "planYearStart": "calendar",
+      "frequencies": { "prophylaxis": "2 per calendar_year" },
+      "waitingPeriodsMonths": {},
+      "downgrades": null,
+      "missingToothClause": null,
+      "cobRule": null,
+      "$sparse": "MetLife portal omits history, downgrades, missing-tooth, COB — fields must come back unavailable-from-payer"
+    },
+    "mock-metlife/GRP-TECHCO": {
+      "carrierName": "MetLife Mock",
+      "employer": "TechCo Systems LLC",
+      "annualMax": 1500, "dedIndividual": 60, "dedFamily": null, "dedAppliesTo": ["basic", "major"],
+      "coverage": { "preventive": 90, "basic": 80, "major": 50, "ortho": 0 },
+      "planYearStart": "calendar",
+      "frequencies": { "prophylaxis": "2 per calendar_year", "bitewings": "1 per calendar_year" },
+      "waitingPeriodsMonths": {},
+      "downgrades": null,
+      "missingToothClause": null,
+      "cobRule": null,
+      "$sparse": true
+    },
+    "mock-guardian/GRP-ACME": {
+      "carrierName": "Guardian Mock",
+      "employer": "Acme Fabrication Inc",
+      "annualMax": 1500, "dedIndividual": 50, "dedFamily": 150, "dedAppliesTo": ["basic", "major"],
+      "coverage": { "preventive": 100, "basic": 80, "major": 50, "ortho": 0 },
+      "planYearStart": "calendar",
+      "frequencies": { "prophylaxis": "2 per calendar_year", "bitewings": "1 per calendar_year", "exam": "2 per calendar_year" },
+      "waitingPeriodsMonths": {},
+      "downgrades": [],
+      "missingToothClause": false,
+      "cobRule": "standard",
+      "$phoneOnly": "No portal. Voice path: SimulatedVoice returns a scripted call transcript containing exactly these values."
+    },
+    "mock-suncoast/GRP-SCHOOL": {
+      "carrierName": "SunCoast Dental Trust",
+      "employer": "Cedar Park ISD",
+      "annualMax": 1800, "dedIndividual": 100, "dedFamily": 300, "dedAppliesTo": ["major"],
+      "coverage": { "preventive": 100, "basic": 80, "major": 50, "ortho": 0 },
+      "planYearStart": "calendar",
+      "frequencies": {},
+      "waitingPeriodsMonths": {},
+      "downgrades": [],
+      "missingToothClause": true,
+      "cobRule": "standard",
+      "$manualOnly": "No portal, no voice script → verification parks in HUMAN_REVIEW; reviewer completes from this data."
+    }
+  },
+  "members": [
+    { "subscriberId": "SUB-1001", "patient": { "first": "Alice", "last": "Nguyen", "birthdate": "1988-04-12" }, "relationship": "self", "plan": "mock-delta/GRP-ACME", "apptTime": "08:00", "minutes": 60, "provider": "Dr. Chen", "cdt": ["D1110", "D0120", "D0274"], "usage": { "maxUsed": 320, "dedIndividualMet": 50, "prophyUsed": 1, "prophyLast": "2026-01-15", "bwxUsed": 0, "examUsed": 1 }, "scenario": "clean" },
+    { "subscriberId": "SUB-1002", "patient": { "first": "Marcus", "last": "Webb", "birthdate": "1975-09-30" }, "relationship": "self", "plan": "mock-delta/GRP-ACME", "apptTime": "08:00", "minutes": 60, "provider": "RDH Lopez", "cdt": ["D1110", "D0120"], "usage": { "maxUsed": 610, "dedIndividualMet": 50, "prophyUsed": 2, "prophyLast": "2026-05-02", "bwxUsed": 1, "examUsed": 2 }, "scenario": "frequency_conflict", "$expect": "D1110 scheduled but 2/2 prophies used → attention" },
+    { "subscriberId": "SUB-1003", "patient": { "first": "Elena", "last": "Rossi", "birthdate": "1992-11-08" }, "relationship": "self", "plan": "mock-delta/GRP-TECHCO", "apptTime": "09:00", "minutes": 90, "provider": "Dr. Chen", "cdt": ["D2740"], "usage": { "maxUsed": 0, "dedIndividualMet": 0, "prophyUsed": 0, "bwxUsed": 0, "examUsed": 1 }, "memberSince": "2026-03-01", "scenario": "waiting_period_conflict", "$expect": "major has 12mo waiting period, effective 2026-03-01 → crown not covered until 2027-03-01" },
+    { "subscriberId": "SUB-1004", "patient": { "first": "James", "last": "Porter", "birthdate": "1969-02-21" }, "relationship": "self", "plan": "mock-delta/GRP-TECHCO", "apptTime": "09:30", "minutes": 60, "provider": "RDH Lopez", "cdt": ["D1110", "D0120"], "terminated": "2026-05-31", "scenario": "coverage_terminated", "$expect": "portal shows TERMINATED 05/31/2026 → critical attention" },
+    { "subscriberId": "SUB-1005", "patient": { "first": "Priya", "last": "Shah", "birthdate": "1983-07-04" }, "relationship": "self", "plan": "mock-delta/GRP-SCHOOL", "apptTime": "10:00", "minutes": 90, "provider": "RDH Lopez", "cdt": ["D4341", "D4341"], "usage": { "maxUsed": 180, "dedIndividualMet": 25, "prophyUsed": 1, "prophyLast": "2025-11-20", "bwxUsed": 1, "examUsed": 1 }, "scenario": "clean" },
+    { "subscriberId": "SUB-1006", "patient": { "first": "Tom", "last": "Okafor", "birthdate": "1990-12-17" }, "relationship": "self", "plan": "mock-metlife/GRP-ACME", "apptTime": "10:30", "minutes": 60, "provider": "Dr. Chen", "cdt": ["D2392"], "usage": { "maxUsed": 95, "dedIndividualMet": 50, "prophyUsed": 1 }, "scenario": "clean_sparse" },
+    { "subscriberId": "SUB-1007", "patient": { "first": "Hana", "last": "Kim", "birthdate": "1986-03-25" }, "relationship": "self", "plan": "mock-metlife/GRP-TECHCO", "apptTime": "11:00", "minutes": 90, "provider": "Dr. Chen", "cdt": ["D2740"], "usage": { "maxUsed": 400, "dedIndividualMet": 0, "prophyUsed": 2, "bwxUsed": 1 }, "scenario": "clean_sparse" },
+    { "subscriberId": "SUB-1008", "patient": { "first": "Luis", "last": "Romero", "birthdate": "1979-08-14" }, "relationship": "self", "plan": "mock-guardian/GRP-ACME", "apptTime": "13:00", "minutes": 60, "provider": "RDH Lopez", "cdt": ["D1110", "D0120", "D0274"], "usage": { "maxUsed": 250, "dedIndividualMet": 50, "prophyUsed": 1, "prophyLast": "2026-02-10", "bwxUsed": 0, "examUsed": 1 }, "scenario": "voice_path" },
+    { "subscriberId": "SUB-1009", "patient": { "first": "Grace", "last": "Liu", "birthdate": "1971-05-06" }, "relationship": "self", "plan": "mock-suncoast/GRP-SCHOOL", "apptTime": "14:00", "minutes": 120, "provider": "Dr. Chen", "cdt": ["D6065"], "usage": { "maxUsed": 0, "dedIndividualMet": 0 }, "scenario": "human_review_path" },
+    { "subscriberId": "SUB-1010", "patient": { "first": "Owen", "last": "Brooks", "birthdate": "2015-10-02" }, "relationship": "child", "subscriberName": "Dana Brooks", "plan": "mock-delta/GRP-SCHOOL", "apptTime": "15:00", "minutes": 45, "provider": "RDH Lopez", "cdt": ["D0120", "D0274", "D1120"], "usage": { "maxUsed": 120, "dedIndividualMet": 0, "prophyUsed": 1, "prophyLast": "2025-12-05", "bwxUsed": 0, "examUsed": 1 }, "scenario": "clean" },
+    { "subscriberId": "SUB-1011", "patient": { "first": "Sofia", "last": "Marino", "birthdate": "1995-01-29" }, "relationship": "self", "plan": "mock-delta/GRP-ACME", "apptTime": "15:30", "minutes": 90, "provider": "Dr. Chen", "cdt": ["D2740"], "usage": { "maxUsed": 0, "dedIndividualMet": 0, "prophyUsed": 1, "bwxUsed": 1, "examUsed": 1 }, "scenario": "deductible_unmet_high_value", "$expect": "crown scheduled, $0 of $50 deductible met → info exception with estimate note" },
+    { "subscriberId": "SUB-1012", "patient": { "first": "Dev", "last": "Patel", "birthdate": "1998-06-11" }, "relationship": "self", "plan": "mock-metlife/GRP-TECHCO", "apptTime": "16:00", "minutes": 60, "provider": "RDH Lopez", "cdt": ["D1110", "D0120"], "usage": { "maxUsed": 0, "dedIndividualMet": 0, "prophyUsed": 0 }, "scenario": "clean_sparse" }
+  ]
+}
