@@ -60,7 +60,8 @@ until [ "$(sql 'select least((select count(*) from patient_link),(select count(*
   sleep 2
 done
 
-TOMORROW=$(date -d "+1 day" +%F)
+# "tomorrow" must match the seed's definition: practice-local (America/Chicago)
+TOMORROW=$(TZ=America/Chicago date -d "+1 day" +%F)
 echo "==> running nightly batch for $TOMORROW"
 PLANNED=$(curl -sf -X POST "$API_BASE_URL/api/batch/run" -H 'content-type: application/json' \
   -d "{\"practiceId\":\"$PRACTICE\",\"date\":\"$TOMORROW\"}" | python3 -c 'import json,sys;print(json.load(sys.stdin)["planned"])')

@@ -46,7 +46,8 @@ for i in $(seq 1 30); do
   sleep 1
 done
 
-TOMORROW=$(date -d "+1 day" +%F 2>/dev/null || date -v+1d +%F)
+# "tomorrow" must match the seed's definition: practice-local (America/Chicago)
+TOMORROW=$(TZ=America/Chicago date -d "+1 day" +%F 2>/dev/null || TZ=America/Chicago date -v+1d +%F)
 echo "==> running nightly batch for $TOMORROW"
 curl -sf -X POST "$API_BASE_URL/api/batch/run" \
   -H 'content-type: application/json' \

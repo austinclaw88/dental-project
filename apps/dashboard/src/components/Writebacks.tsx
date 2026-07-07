@@ -27,7 +27,7 @@ export function Writebacks({ writebacks }: { writebacks: WritebackCommand[] }) {
 
 function summarize(w: WritebackCommand): string {
   const p = w.payload as Record<string, unknown>;
-  if (w.target === "benefit_rows") return `${p.rows ?? "?"} benefit rows`;
+  if (w.target === "benefit_rows") return `${Array.isArray(p.rows) ? p.rows.length : "?"} benefit rows`;
   if (w.target === "insverify") return `verified ${p.scope ?? ""}`;
   if (w.target === "insplan_note") return "plan note updated";
   if (w.target === "commlog") return "front-desk summary";
