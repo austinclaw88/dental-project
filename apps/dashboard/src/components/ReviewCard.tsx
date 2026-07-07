@@ -73,7 +73,10 @@ export function ReviewCard({
   }, [task]);
   const [values, setValues] = useState<Record<string, string>>(initial);
 
-  const overdue = new Date(task.slaDueAt).getTime() < Date.now();
+  const slaMs = task.slaDueAt ? new Date(task.slaDueAt).getTime() : NaN;
+  const hasSla = !Number.isNaN(slaMs);
+  const overdue = hasSla && slaMs < Date.now();
+  const changedCount = FIELDS.filter((f) => (values[f.path] ?? "") !== initial[f.path]).length;
 
   async function complete() {
     setSaving(true);
@@ -88,15 +91,23 @@ export function ReviewCard({
   return (
     <div className="card review-card" data-testid="review-card">
       <div className="review-head" onClick={() => setOpen((o) => !o)}>
+        <span className="avatar" aria-hidden>{avatarInitials(task.patientName)}</span>
         <div className="who">
           <div className="name">
-            {task.patientName} <span className="muted" style={{ fontWeight: 500 }}>· {task.carrierName}</span>
+            {task.patientName}
+            {task.carrierName ? (
+              <span className="muted" style={{ fontWeight: 500 }}> · {task.carrierName}</span>
+            ) : null}
           </div>
           <div className="reason">{task.reason}</div>
         </div>
-        <span className={`sla ${overdue ? "overdue" : ""}`}>
-          SLA {overdue ? "overdue" : `by ${fmtDate(task.slaDueAt)}`}
-        </span>
+        {hasSla ? (
+          <span className={`sla ${overdue ? "overdue" : ""}`}>
+            SLA {overdue ? "overdue" : `by ${fmtDate(task.slaDueAt)}`}
+          </span>
+        ) : (
+          <span />
+        )}
         <button type="button" className="btn btn-sm" aria-expanded={open}>
           {open ? "Collapse" : "Complete review"}
         </button>
@@ -104,41 +115,41 @@ export function ReviewCard({
 
       {open && (
         <div className="review-form">
-          {FIELDS.map((f) => {
-            const changed = (values[f.path] ?? "") !== initial[f.path];
-            return (
-              <div className="rf-row" key={f.path}>
-                <label htmlFor={`rf-${task.id}-${f.path}`}>
-                  {f.label} <span className="draft">({f.path})</span>
-                </label>
-                {f.type === "boolean" ? (
-                  <select
-                    id={`rf-${task.id}-${f.path}`}
-                    className={changed ? "changed" : ""}
-                    value={values[f.path] ?? ""}
-                    onChange={(e) => setValues((v) => ({ ...v, [f.path]: e.target.value }))}
-                  >
-                    <option value="">— unknown —</option>
-                    <option value="true">Yes</option>
-                    <option value="false">No</option>
-                  </select>
-                ) : (
-                  <input
-                    id={`rf-${task.id}-${f.path}`}
-                    className={changed ? "changed" : ""}
-                    type="number"
-                    inputMode="decimal"
-                    placeholder={f.type === "percent" ? "%" : "$"}
-                    value={values[f.path] ?? ""}
-                    onChange={(e) => setValues((v) => ({ ...v, [f.path]: e.target.value }))}
-                  />
-                )}
-              </div>
-            );
-          })}
-          <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
+          <div className="rf-grid">
+            {FIELDS.map((f) => {
+              const changed = (values[f.path] ?? "") !== initial[f.path];
+              return (
+                <div className="rf-row" key={f.path}>
+                  <label htmlFor={`rf-${task.id}-${f.path}`}>{f.label}</label>
+                  {f.type === "boolean" ? (
+                    <select
+                      id={`rf-${task.id}-${f.path}`}
+                      className={changed ? "changed" : ""}
+                      value={values[f.path] ?? ""}
+                      onChange={(e) => setValues((v) => ({ ...v, [f.path]: e.target.value }))}
+                    >
+                      <option value="">— unknown —</option>
+                      <option value="true">Yes</option>
+                      <option value="false">No</option>
+                    </select>
+                  ) : (
+                    <input
+                      id={`rf-${task.id}-${f.path}`}
+                      className={changed ? "changed" : ""}
+                      type="number"
+                      inputMode="decimal"
+                      placeholder={f.type === "percent" ? "%" : "$"}
+                      value={values[f.path] ?? ""}
+                      onChange={(e) => setValues((v) => ({ ...v, [f.path]: e.target.value }))}
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <div className="rf-actions">
             <button type="button" className="btn btn-primary" onClick={complete} disabled={saving}>
-              {saving ? "Submitting…" : "Complete review"}
+              {saving ? "Submitting…" : `Complete review${changedCount ? ` · ${changedCount} changed` : ""}`}
             </button>
             <button type="button" className="btn" onClick={() => setValues(initial)} disabled={saving}>
               Reset
@@ -148,4 +159,9 @@ export function ReviewCard({
       )}
     </div>
   );
+}
+
+function avatarInitials(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  return ((parts[0]?.[0] ?? "") + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase();
 }

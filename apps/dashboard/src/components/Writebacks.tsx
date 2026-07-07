@@ -16,9 +16,7 @@ export function Writebacks({ writebacks }: { writebacks: WritebackCommand[] }) {
         <div className="wb" key={w.id}>
           <span className="t">{TARGET_LABEL[w.target]}</span>
           <span className={`wb-status wb-${w.status}`}>{w.status}</span>
-          <span className="muted" style={{ fontSize: 13 }}>
-            {summarize(w)}
-          </span>
+          {summarize(w) && <span className="sum">{summarize(w)}</span>}
         </div>
       ))}
     </div>

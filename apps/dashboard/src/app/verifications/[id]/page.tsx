@@ -10,6 +10,8 @@ import { Timeline } from "../../../components/Timeline";
 import { Writebacks } from "../../../components/Writebacks";
 import { OfflineBanner } from "../../../components/OfflineBanner";
 
+const EXC_ICON: Record<string, string> = { info: "ⓘ", warning: "⚠︎", critical: "⛔" };
+
 export default function VerificationDetailPage({ params }: { params: { id: string } }) {
   const { id } = params;
   const [data, setData] = useState<VerificationDetail | null | undefined>(undefined);
@@ -100,41 +102,51 @@ export default function VerificationDetailPage({ params }: { params: { id: strin
       </div>
 
       {unresolved.length > 0 && (
-        <div className="card" style={{ paddingTop: 8, paddingBottom: 8 }}>
+        <div className="card exccard">
           {unresolved.map((e) => (
-            <div className={`exc exc-${e.severity}`} key={e.id} style={{ border: "none" }}>
-              <span className="tag">{e.type.replace(/_/g, " ")}</span>
-              <span className="msg">{e.message}</span>
+            <div className={`exc exc-${e.severity}`} key={e.id}>
+              <span className="excico" aria-hidden>{EXC_ICON[e.severity] ?? "ⓘ"}</span>
+              <span className="msg">
+                <span className="tag">{e.type.replace(/_/g, " ")}</span>
+                {e.message}
+              </span>
+              <span />
             </div>
           ))}
         </div>
       )}
 
-      {/* breakdown — the paper form */}
-      <div className="card">
-        <h2>Benefit breakdown</h2>
-        {snapshot ? (
-          <BreakdownForm b={snapshot.breakdown} />
-        ) : verification.displayStatus === "in_progress" ? (
-          <p className="muted">
-            Breakdown not available yet — verification is still running
-            {steps.some((s) => s.kind === "human")
-              ? " (parked for human review; being completed by our team)."
-              : "."}
-          </p>
-        ) : (
-          <p className="muted">No breakdown captured for this verification.</p>
-        )}
-      </div>
+      <div className="detail-grid">
+        <div className="detail-main">
+          {/* breakdown — the paper insurance form */}
+          <div className="card">
+            <h2>Benefit breakdown</h2>
+            {snapshot ? (
+              <BreakdownForm b={snapshot.breakdown} />
+            ) : verification.displayStatus === "in_progress" ? (
+              <p className="muted">
+                Breakdown not available yet — verification is still running
+                {steps.some((s) => s.kind === "human")
+                  ? " (parked for human review; being completed by our team)."
+                  : "."}
+              </p>
+            ) : (
+              <p className="muted">No breakdown captured for this verification.</p>
+            )}
+          </div>
+        </div>
 
-      <div className="card">
-        <h2>Verification steps</h2>
-        <Timeline steps={steps} />
-      </div>
+        <div className="detail-side">
+          <div className="card">
+            <h2>Verification steps</h2>
+            <Timeline steps={steps} />
+          </div>
 
-      <div className="card">
-        <h2>OpenDental writebacks</h2>
-        <Writebacks writebacks={writebacks} />
+          <div className="card">
+            <h2>OpenDental writebacks</h2>
+            <Writebacks writebacks={writebacks} />
+          </div>
+        </div>
       </div>
     </>
   );

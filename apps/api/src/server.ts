@@ -246,7 +246,7 @@ export function buildServer(deps: Deps): FastifyInstance {
     await audit("dashboard", "verification.read", `verification/${id}`, "PHI");
 
     return {
-      verification: camel(vr),
+      verification: { ...camel(vr), displayStatus: displayStatus(vr.status as string, exceptions) },
       patient: patient[0] ? camel(patient[0]) : null,
       coverage: coverage[0] ? camel(coverage[0]) : null,
       appointment: appointment[0] ? camel(appointment[0]) : null,

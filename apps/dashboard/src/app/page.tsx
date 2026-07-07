@@ -14,9 +14,23 @@ import { QueueRow } from "../components/QueueRow";
 import { SummaryStrip } from "../components/SummaryStrip";
 import { OfflineBanner } from "../components/OfflineBanner";
 
+type FilterKey = "verified" | "attention" | "in_progress" | "failed";
+const FILTER_STATUSES: Record<FilterKey, VerificationListItem["displayStatus"][]> = {
+  verified: ["verified"],
+  attention: ["attention"],
+  in_progress: ["in_progress", "planned"],
+  failed: ["failed"],
+};
+
 function tomorrow(): string {
   const d = new Date();
   d.setDate(d.getDate() + 1);
+  return d.toISOString().slice(0, 10);
+}
+
+function shiftDate(iso: string, days: number): string {
+  const d = new Date(`${iso}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
   return d.toISOString().slice(0, 10);
 }
 
@@ -27,6 +41,7 @@ export default function MorningQueue() {
   const [metrics, setMetrics] = useState<MetricsSummary | null>(null);
   const [batching, setBatching] = useState(false);
   const [loadError, setLoadError] = useState(false);
+  const [filter, setFilter] = useState<FilterKey | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // resolve practice once
@@ -107,8 +122,13 @@ export default function MorningQueue() {
     }
   }, [practice, date, load]);
 
+  const visible = filter
+    ? (items ?? []).filter((i) => FILTER_STATUSES[filter].includes(i.displayStatus))
+    : items ?? [];
+
   return (
     <>
+      {anyBusy && <div className="appprogress" role="progressbar" aria-label="Verifications in progress" />}
       <OfflineBanner />
 
       <div className="head">
@@ -119,7 +139,25 @@ export default function MorningQueue() {
         <div className="head-actions">
           <label className="datefield">
             Schedule date
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            <span className="datestepper">
+              <button
+                type="button"
+                className="daystep prev"
+                aria-label="Previous day"
+                onClick={() => setDate((d) => shiftDate(d, -1))}
+              >
+                ‹
+              </button>
+              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+              <button
+                type="button"
+                className="daystep next"
+                aria-label="Next day"
+                onClick={() => setDate((d) => shiftDate(d, 1))}
+              >
+                ›
+              </button>
+            </span>
           </label>
           <button className="btn btn-primary" onClick={onRunBatch} disabled={batching || !practice}>
             {batching ? "Running batch…" : "Run nightly batch"}
@@ -127,7 +165,9 @@ export default function MorningQueue() {
         </div>
       </div>
 
-      {items && <SummaryStrip items={items} metrics={metrics} />}
+      {items && (
+        <SummaryStrip items={items} metrics={metrics} active={filter} onFilter={setFilter} />
+      )}
 
       {items === null ? (
         <QueueSkeleton />
@@ -137,21 +177,41 @@ export default function MorningQueue() {
         </div>
       ) : items.length === 0 ? (
         <div className="empty">
-          <div className="big">☕</div>
+          <div className="big" aria-hidden>☕</div>
           <h3>Nothing on the schedule</h3>
           <p>No appointments for {fmtDateLong(date)}. Pick another date or run the nightly batch.</p>
         </div>
-      ) : allClean(items) ? (
-        <>
-          <div className="empty" style={{ paddingBottom: 20 }}>
-            <div className="big">✅</div>
-            <h3>All clear — nothing to do</h3>
-            <p>Every patient verified clean. The rows below are for reference.</p>
-          </div>
-          <Queue items={items} onReverify={onReverify} onResolve={onResolve} />
-        </>
       ) : (
-        <Queue items={items} onReverify={onReverify} onResolve={onResolve} />
+        <>
+          {allClean(items) && (
+            <div className="allclear" role="status">
+              <div className="big" aria-hidden>✓</div>
+              <div>
+                <h3>All clear — nothing to do</h3>
+                <p>Every patient verified clean. The rows below are for reference.</p>
+              </div>
+            </div>
+          )}
+          {filter && (
+            <div className="filterbar">
+              <span>
+                Showing <strong>{visible.length}</strong> {filter.replace(/_/g, " ")} of {items.length}
+              </span>
+              <button type="button" className="btn-ghost btn-sm" onClick={() => setFilter(null)}>
+                Clear filter
+              </button>
+            </div>
+          )}
+          {visible.length === 0 ? (
+            <div className="empty">
+              <div className="big" aria-hidden>✓</div>
+              <h3>No {filter?.replace(/_/g, " ")} appointments</h3>
+              <p>Nothing matches this filter. Clear it to see the full schedule.</p>
+            </div>
+          ) : (
+            <Queue items={visible} onReverify={onReverify} onResolve={onResolve} />
+          )}
+        </>
       )}
     </>
   );

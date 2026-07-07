@@ -5,6 +5,15 @@ import type { ListException, VerificationListItem } from "../types";
 import { fmtTime } from "../lib/format";
 import { StatusPill } from "./StatusPill";
 
+const EXC_ICON: Record<string, string> = { info: "ⓘ", warning: "⚠︎", critical: "⛔" };
+
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  const a = parts[0]?.[0] ?? "";
+  const b = parts.length > 1 ? parts[parts.length - 1][0] : "";
+  return (a + b).toUpperCase();
+}
+
 export function QueueRow({
   item,
   onReverify,
@@ -16,6 +25,7 @@ export function QueueRow({
 }) {
   const [reverifying, setReverifying] = useState(false);
   const unresolved = item.exceptions.filter((e) => !e.resolvedAt);
+  const resolved = item.exceptions.filter((e) => e.resolvedAt);
   const busy = item.displayStatus === "in_progress" || item.displayStatus === "planned";
 
   async function handleReverify() {
@@ -28,17 +38,22 @@ export function QueueRow({
   }
 
   return (
-    <div className="qrow" data-testid="queue-row">
+    <div className={`qrow st-${item.displayStatus}`} data-testid="queue-row">
       <div className="qrow-main">
         <div className="qtime">
           {fmtTime(item.appointmentAt)}
           <small>{item.provider ?? "—"}</small>
         </div>
         <div className="qpatient">
-          <div className="name">{item.patientName}</div>
-          <div className="meta">{item.scope === "eligibility_only" ? "Eligibility only" : "Full breakdown"}</div>
+          <span className="avatar" aria-hidden>{initials(item.patientName)}</span>
+          <span className="who">
+            <span className="name">{item.patientName}</span>
+            <span className="meta">{item.scope === "eligibility_only" ? "Eligibility only" : "Full breakdown"}</span>
+          </span>
         </div>
-        <div className="qcarrier">{item.carrierName ?? "No carrier on file"}</div>
+        <div className={`qcarrier${item.carrierName ? "" : " nocarrier"}`}>
+          {item.carrierName ?? "No carrier on file"}
+        </div>
         <div className="qchips">
           {item.cdtCodes.map((c, i) => (
             <span className="chip" key={`${c}-${i}`}>
@@ -46,8 +61,10 @@ export function QueueRow({
             </span>
           ))}
         </div>
-        <div className="qright">
+        <div className="qstatus">
           <StatusPill status={item.displayStatus} />
+        </div>
+        <div className="qright">
           <Link className="btn btn-sm" href={`/verifications/${item.id}`}>
             Details
           </Link>
@@ -62,21 +79,18 @@ export function QueueRow({
         </div>
       </div>
 
-      {unresolved.length > 0 && (
+      {(unresolved.length > 0 || resolved.length > 0) && (
         <div className="exceptions">
           {unresolved.map((e) => (
             <ExceptionRow key={e.id} exc={e} onResolve={onResolve} />
           ))}
-        </div>
-      )}
-
-      {unresolved.length === 0 && item.exceptions.length > 0 && (
-        <div className="exceptions">
-          {item.exceptions.map((e) => (
-            <div className={`exc exc-${e.severity} resolved`} key={e.id}>
-              <span className="tag">{e.type.replace(/_/g, " ")}</span>
-              <span className="msg">{e.message}</span>
-              <span className="resolvedby">✓ resolved</span>
+          {resolved.map((e) => (
+            <div className={`exc exc-${e.severity} resolved`} key={e.id} data-testid="exception-row">
+              <span className="excico" aria-hidden>✓</span>
+              <span className="msg">
+                <span className="rlabel">Resolved</span> · {e.type.replace(/_/g, " ")} — {e.message}
+              </span>
+              <span />
             </div>
           ))}
         </div>
@@ -103,8 +117,11 @@ function ExceptionRow({
   }
   return (
     <div className={`exc exc-${exc.severity}`} data-testid="exception-row">
-      <span className="tag">{exc.type.replace(/_/g, " ")}</span>
-      <span className="msg">{exc.message}</span>
+      <span className="excico" aria-hidden>{EXC_ICON[exc.severity] ?? "ⓘ"}</span>
+      <span className="msg">
+        <span className="tag">{exc.type.replace(/_/g, " ")}</span>
+        {exc.message}
+      </span>
       <button type="button" className="btn btn-sm" onClick={handle} disabled={resolving}>
         {resolving ? "Resolving…" : "Resolve"}
       </button>

@@ -56,7 +56,7 @@ describe("ReviewCard", () => {
     const activeSelect = screen.getByLabelText(/Plan active/i);
     await user.selectOptions(activeSelect, "true");
 
-    await user.click(screen.getByRole("button", { name: /^Complete review$/i }));
+    await user.click(screen.getByRole("button", { name: /^Complete review( ·|$)/i }));
 
     expect(onComplete).toHaveBeenCalledTimes(1);
     const [id, fields, reviewer] = onComplete.mock.calls[0];

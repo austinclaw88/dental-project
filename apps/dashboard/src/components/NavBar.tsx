@@ -26,8 +26,11 @@ export function NavBar() {
     <header className="appbar">
       <div className="appbar-inner">
         <div className="brand">
-          NightShift
-          <small>{practice}</small>
+          <span className="mark" aria-hidden>◗</span>
+          <span>
+            NightShift
+            <small>{practice}</small>
+          </span>
         </div>
         <nav className="nav">
           <Link href="/" className={isQueue ? "active" : ""}>
