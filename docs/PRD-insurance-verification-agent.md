@@ -168,7 +168,20 @@ Business validation gates (from discovery report): own clinic 60 days → 5 desi
 | Voice agent fails rep interactions at scale | Narrow launch payer set, partial-result handoff (R11), human queue backstop |
 | Founder bandwidth (clinic + startup) | Clinic doubles as lab; review-queue staffing hired early; ruthless MVP scope (§3 non-goals) |
 
-## 12. Open questions
+## 12. Competitive intelligence (living section)
+
+| Player | Market | What we know | Exploitable weakness |
+|---|---|---|---|
+| **Zuub** | US, funded | Real-time eligibility + breakdowns, DSO-tilted GTM | Depth of plan-level quirks; OpenDental-native writeback |
+| **Verrific** | US | Verification automation w/ human backing | Turnaround consistency; coverage long tail |
+| **Vyne Dental** | US, established | Claims/attachments rails + verification add-on | Verification is an attach, not the product; UX |
+| **Pearl** | US, funded | Imaging AI expanding into practice intelligence | Verification not core; no payer-ops DNA |
+| **Cleer** | Canada, funded | AI agents call insurers directly; 200+ offices. **Field report (secondhand, n=1, 07/2026): pricey, slow turnaround, incomplete payer coverage** | All three axes are design choices we control: SLA (overnight batch by 7 AM), coverage floor (human review queue = no unsupported payer), price (AI-native unit cost ~$0.55–0.90/verification) |
+| **eAssist / outsourcers** | US, services | $3–8/patient, 24–72h turnaround | Speed, structure (PDFs not PMS data), error rates |
+
+**Positioning implications:** (1) never sell "AI" — sell the 7 AM SLA and the no-unsupported-payer guarantee, the two things field reports say incumbents miss; (2) price below outsourcer-equivalent, above self-serve tools, anchored to the half-FTE; (3) writeback into OpenDental is the demo moment — incumbents hand back documents, we hand back a updated PMS. Validate all of this against `discovery-interview-script.md` results before GA pricing is locked.
+
+## 13. Open questions
 
 1. Which clearinghouse partner for 270/271 (Stedi vs. DentalXChange vs. Onederful) — decision owed by TDD §6 evaluation, Week 2.
 2. Whether OpenDental writeback of `benefit` rows should default ON or start summary-note-only for the first 2 weeks per practice (trust ramp).
