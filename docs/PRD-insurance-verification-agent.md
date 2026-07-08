@@ -170,16 +170,25 @@ Business validation gates (from discovery report): own clinic 60 days → 5 desi
 
 ## 12. Competitive intelligence (living section)
 
-| Player | Market | What we know | Exploitable weakness |
-|---|---|---|---|
-| **Zuub** | US, funded | Real-time eligibility + breakdowns, DSO-tilted GTM | Depth of plan-level quirks; OpenDental-native writeback |
-| **Verrific** | US | Verification automation w/ human backing | Turnaround consistency; coverage long tail |
-| **Vyne Dental** | US, established | Claims/attachments rails + verification add-on | Verification is an attach, not the product; UX |
-| **Pearl** | US, funded | Imaging AI expanding into practice intelligence | Verification not core; no payer-ops DNA |
-| **Cleer** | Canada, funded | AI agents call insurers directly; 200+ offices. **Field report (secondhand, n=1, 07/2026): pricey, slow turnaround, incomplete payer coverage** | All three axes are design choices we control: SLA (overnight batch by 7 AM), coverage floor (human review queue = no unsupported payer), price (AI-native unit cost ~$0.55–0.90/verification) |
-| **eAssist / outsourcers** | US, services | $3–8/patient, 24–72h turnaround | Speed, structure (PDFs not PMS data), error rates |
+**Updated 07/2026 after a full field survey. This table changed the go/no-go assessment — see the note below it.**
 
-**Positioning implications:** (1) never sell "AI" — sell the 7 AM SLA and the no-unsupported-payer guarantee, the two things field reports say incumbents miss; (2) price below outsourcer-equivalent, above self-serve tools, anchored to the half-FTE; (3) writeback into OpenDental is the demo moment — incumbents hand back documents, we hand back a updated PMS. Validate all of this against `discovery-interview-script.md` results before GA pricing is locked.
+| Player | Market | What we verified | Overlap with this PRD |
+|---|---|---|---|
+| **Foji** | US | Authorized **OpenDental + Dentrix** integration partner; portal-scraping AI agents; full breakdowns (percentages, deductibles, frequencies, missing-tooth) **written back into the PMS**; flat monthly pricing | **Near-total** — portal layer, writeback, pricing model |
+| **Azops Dental** | US | Eligibility + payer portals + **voice + fax + human review**; **provenance kept behind every result** (portal screenshots, call transcripts, fax PDFs); per-provider flat fee | **Near-total** — waterfall, provenance, review queue |
+| **Stratus AI** | US | **Voice-AI calls** payers; human review of every report; **OpenDental is the native integration** | High — voice layer, OpenDental focus |
+| **Hestia Dental** | US | Calls insurers; **D-code-level** breakdowns loaded into OpenDental + PDF/faxback upload | High |
+| **Pearl (Precheck)** | US, funded | Automated verification up to 14 days ahead, tooth-specific breakdowns; imaging-AI distribution behind it | High, with distribution we lack |
+| **Overjet** | US, funded | Insurance verification product line alongside imaging AI; insurer relationships | High, with payer-side relationships |
+| **Zuub / Verrific / Vyne** | US, funded/established | Real-time eligibility + breakdowns (Zuub), verification automation (Verrific), rails + add-on (Vyne) | High |
+| **PatientXpress** | US | All-in-one AI platform (receptionist, verification, billing), claims 1,500+ practices, works alongside OpenDental/Dentrix | Medium — suite play |
+| **dentalrobot / ProsperAI / DentalAIAssist** | US | Verification/RCM automation (DSO-tilted and SMB variants) | Medium–high |
+| **Cleer** | Canada, funded | AI agents call insurers; 200+ offices. Field report (secondhand, n=1): pricey, slow, incomplete coverage | High (Canada only) |
+| **DayDream** | US, funded (2023, SF) | Tech-enabled full-service billing (verification, claims, posting, appeals) | Medium — services form factor |
+| **Dentalogic** | US, services | Verification + billing + PPO optimization, dedicated account manager, **$499/mo** + $3.5–4.5k setup | Medium — validates the $499 price point |
+| **eAssist / outsourcers** | US, services | $3–8/patient, 24–72h turnaround | Low-tech baseline |
+
+**Frank assessment (07/2026):** the differentiators this PRD proposed — OpenDental-native writeback, portal+voice waterfall, provenance artifacts, human-review coverage floor, flat pricing — **each now exists in at least one shipping competitor**, and Foji + Azops together cover nearly the full spec. The category has entered the "funded knife-fight" profile that the discovery report's own Stage 2 used to disqualify categories (cf. AI phone receptionists). The original core claim ("the hard version is newly possible and nobody owns it") is no longer true. Verification remains viable only as (a) a feature of a differently-wedged product, (b) a niche play (specialty, Medicaid, or Canada), or (c) a knowingly contrarian bet on out-executing ~10 entrants without capital. The companion analysis (`dental-venture-discovery-round2.md`) identifies the adjacent uncontested wedge — payment integrity / underpayment recovery — which shares this PRD's infrastructure and buyer.
 
 ## 13. Open questions
 
