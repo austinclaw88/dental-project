@@ -14,6 +14,7 @@
     "dev:portal": "npm run -w @nightshift/mock-portal dev",
     "dev:connector": "npm run -w @nightshift/connector dev",
     "dev:dashboard": "npm run -w @nightshift/dashboard dev",
+    "dev:recoup-web": "npm run -w @nightshift/recoup-web dev",
     "demo": "bash scripts/demo.sh",
     "test": "npm run test --workspaces --if-present"
   },

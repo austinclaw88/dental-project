@@ -6,7 +6,9 @@
   "description": "Recoup Audit — PMS-agnostic dental underpayment audit engine (Phase-0 validation instrument, ATTACK-STRATEGY §5)",
   "main": "src/engine.ts",
   "exports": {
-    ".": "./src/engine.ts"
+    ".": "./src/engine.ts",
+    "./lib": "./src/lib.ts",
+    "./package.json": "./package.json"
   },
   "bin": {
     "recoup-audit": "src/cli.ts"
