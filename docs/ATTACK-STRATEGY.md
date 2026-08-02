@@ -72,7 +72,7 @@ We do **not** throw the prototype away, and we do not sell it at $499/mo into a 
 
 ### Phase 0 — Proof (months 0–3, cost <$10k)
 - Run the discovery script (docs/discovery-interview-script.md) with the two added payment-integrity questions; 10–12 interviews including the Cleer-using friend.
-- Build Recoup MVP on NightShift infra (reuse: connector, canonical schema, artifact store, job runner, extraction pipeline; new: contract/fee-schedule reconstruction from OpenDental + EOB ingestion + variance engine + dispute-letter generator). 6–8 weeks, 2 engineers.
+- Build the audit instrument **PMS-agnostic** (decision 07/2026): CSV claims export + optional fee schedules in, findings + evidence report out — so *any* practice on *any* PMS can take the free-audit offer with zero integration. Where fee schedules are missing, reconstruct de facto rates from the payer's own modal allowed amounts. (Implemented as `apps/recoup-audit`.) The deeper NightShift integration (live EOB ingestion, dispute generation, writeback) follows for practices that convert to ongoing monitoring. 6–8 weeks, 2 engineers.
 - **Audit our own clinic + the friend's practice.** Recover real dollars. Document everything.
 - *Kill gates:* <$5k found across two practices' trailing year → the leakage thesis is wrong for our payer mix; stop or re-scope. Interviews show nobody cares about found money (unlikely) → stop.
 
