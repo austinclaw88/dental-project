@@ -1,0 +1,26 @@
+{
+  "name": "@nightshift/recoup-audit",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Recoup Audit — PMS-agnostic dental underpayment audit engine (Phase-0 validation instrument, ATTACK-STRATEGY §5)",
+  "main": "src/engine.ts",
+  "exports": {
+    ".": "./src/engine.ts"
+  },
+  "bin": {
+    "recoup-audit": "src/cli.ts"
+  },
+  "scripts": {
+    "audit": "tsx src/cli.ts",
+    "demo": "tsx src/demo.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.16.0",
+    "typescript": "^5.5.0",
+    "vitest": "^2.0.0"
+  }
+}

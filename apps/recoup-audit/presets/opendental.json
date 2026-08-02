@@ -1,0 +1,60 @@
+// opendental.json — BEST-EFFORT preset for Open Dental exports.
+//
+// !! EXPECT TO ADJUST THIS PER OFFICE. !!
+// Open Dental has no single canonical "paid claims" export: offices use the
+// Query tool (Reports > User Query), the Insurance Payment reports, or a
+// third-party extract, and each produces different headers. Each canonical
+// field below lists several candidate headers; the FIRST header present in
+// your CSV wins. If none match, the tool prints exactly which field is
+// unmapped and what it looked for — add your header to that list.
+//
+// A User Query that produces every field this tool can use:
+//
+//   SELECT cp.ClaimNum          AS ClaimNum,
+//          cp.ProcDate          AS ProcDate,
+//          car.CarrierName      AS CarrierName,
+//          pl.ProcCode          AS ProcCode,
+//          cp.FeeBilled         AS FeeBilled,
+//          cp.AllowedOverride   AS AllowedAmt,      -- see caveat below
+//          cp.InsPayAmt         AS InsPayAmt,
+//          ip.GroupNum          AS GroupNum,
+//          ip.SubscriberID      AS SubscriberID,
+//          pl.ToothNum          AS ToothNum,
+//          cp.DedApplied        AS DedApplied,
+//          cp.WriteOff          AS WriteOff,
+//          cp.Remarks           AS Remarks,
+//          cl.ClaimType         AS ClaimType,
+//          cp.Percentage        AS Percentage
+//   FROM claimproc cp ...
+//
+// CAVEAT on allowed_amount: Open Dental stores the payer's allowed amount
+// inconsistently (AllowedOverride is often -1 = "not set"). Where it is unset,
+// allowed = FeeBilled - WriteOff is the usual reconstruction; do that in the
+// query and export it as AllowedAmt. Rows with allowed = -1 will be rejected
+// with a clear message rather than silently audited.
+{
+  "name": "opendental",
+  "notes": "Best-effort Open Dental headers. Verify against your own User Query export before trusting the audit.",
+  "columns": {
+    "claim_id": ["ClaimNum", "Claim Num", "claim_id", "ClaimIdentifier"],
+    "service_date": ["ProcDate", "Proc Date", "DateService", "Date of Service", "service_date"],
+    "payer_name": ["CarrierName", "Carrier", "Carrier Name", "InsCarrier", "payer_name"],
+    "cdt_code": ["ProcCode", "Proc Code", "ADACode", "CodeSent", "cdt_code"],
+    "billed_fee": ["FeeBilled", "Fee Billed", "ProcFee", "billed_fee"],
+    "allowed_amount": ["AllowedAmt", "AllowedOverride", "Allowed", "allowed_amount"],
+    "paid_amount": ["InsPayAmt", "InsPayAmount", "Ins Paid", "paid_amount"],
+    "plan_or_group": ["GroupNum", "GroupName", "PlanNum", "plan_or_group"],
+    "subscriber_id": ["SubscriberID", "SubscriberId", "SubscriberID_", "subscriber_id"],
+    "tooth": ["ToothNum", "Tooth Num", "ToothRange", "tooth"],
+    "patient_portion": ["PatientPortion", "PatPortion", "patient_portion"],
+    "writeoff_amount": ["WriteOff", "Write Off", "writeoff_amount"],
+    "deductible_applied": ["DedApplied", "Deductible", "DedEst", "deductible_applied"],
+    "adjustment_codes": ["Remarks", "ClaimAdjReasonCodes", "AdjustmentCodes", "adjustment_codes"],
+    "claim_ordinal": ["ClaimType", "Claim Type", "Ordinal", "claim_ordinal"],
+    "network_name": ["PlanNetwork", "Network", "network_name"],
+    "coverage_pct": ["Percentage", "CovPercent", "coverage_pct"]
+  },
+  "options": {
+    "secondaryOrdinalValues": ["S", "Secondary", "SecondaryClaim"]
+  }
+}

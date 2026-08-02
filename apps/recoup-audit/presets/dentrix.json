@@ -1,0 +1,39 @@
+// dentrix.json — BEST-EFFORT preset for Dentrix / Dentrix Ascend exports.
+//
+// !! EXPECT TO ADJUST THIS PER OFFICE. !!
+// Dentrix offices most often produce this data from the Insurance Aging /
+// Insurance Payment reports exported to CSV, from Dentrix Ascend's "Claims"
+// data export, or from a DXOne/Reporting query. Header spellings differ by
+// version and by whichever report your office runs, so each canonical field
+// below lists candidates; the FIRST one present in your CSV wins.
+//
+// Common gap: many Dentrix report exports omit the payer's ALLOWED amount and
+// give only Billed / Paid / Write-off. When that happens, add a computed
+// column (allowed = billed - write-off) to the export before running the audit
+// — without an allowed amount the underpayment math has nothing to compare.
+{
+  "name": "dentrix",
+  "notes": "Best-effort Dentrix / Dentrix Ascend headers. Confirm the allowed-amount column exists before trusting the audit.",
+  "columns": {
+    "claim_id": ["Claim #", "Claim Number", "ClaimID", "Claim Id", "claim_id"],
+    "service_date": ["Procedure Date", "Date of Service", "Service Date", "Proc Date", "service_date"],
+    "payer_name": ["Insurance Carrier", "Carrier", "Insurance Company", "Payer", "payer_name"],
+    "cdt_code": ["Procedure Code", "ADA Code", "Proc Code", "Code", "cdt_code"],
+    "billed_fee": ["Charge", "Billed Amount", "Fee", "Amount Billed", "billed_fee"],
+    "allowed_amount": ["Allowed Amount", "Allowed", "Contract Amount", "allowed_amount"],
+    "paid_amount": ["Insurance Paid", "Ins Paid", "Payment Amount", "Paid", "paid_amount"],
+    "plan_or_group": ["Group Plan", "Group Number", "Plan Name", "plan_or_group"],
+    "subscriber_id": ["Subscriber ID", "Member ID", "Subscriber Id", "subscriber_id"],
+    "tooth": ["Tooth", "Tooth Number", "Th", "tooth"],
+    "patient_portion": ["Patient Portion", "Patient Balance", "Pat Portion", "patient_portion"],
+    "writeoff_amount": ["Write-Off", "Write Off", "Adjustment", "writeoff_amount"],
+    "deductible_applied": ["Deductible", "Deductible Applied", "Ded", "deductible_applied"],
+    "adjustment_codes": ["Remarks", "Adjustment Reason", "Denial Reason", "adjustment_codes"],
+    "claim_ordinal": ["Claim Type", "Primary/Secondary", "Coverage Order", "claim_ordinal"],
+    "network_name": ["Network", "PPO Network", "network_name"],
+    "coverage_pct": ["Coverage %", "Coverage Percent", "coverage_pct"]
+  },
+  "options": {
+    "secondaryOrdinalValues": ["Sec", "Secondary", "2nd", "Secondary Claim"]
+  }
+}

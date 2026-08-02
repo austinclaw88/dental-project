@@ -1,0 +1,27 @@
+// generic.json — canonical pass-through mapping.
+// Use this when you can control the export headers: name your columns exactly
+// as below and no mapping work is needed. Header matching is case-insensitive
+// and ignores spaces/underscores/dashes, so "Claim ID" also matches "claim_id".
+{
+  "name": "generic",
+  "notes": "Canonical field names, pass-through. Header match is case/space/underscore-insensitive.",
+  "columns": {
+    "claim_id": "claim_id",
+    "service_date": "service_date",
+    "payer_name": "payer_name",
+    "cdt_code": "cdt_code",
+    "billed_fee": "billed_fee",
+    "allowed_amount": "allowed_amount",
+    "paid_amount": "paid_amount",
+    "plan_or_group": "plan_or_group",
+    "subscriber_id": "subscriber_id",
+    "tooth": "tooth",
+    "patient_portion": "patient_portion",
+    "writeoff_amount": "writeoff_amount",
+    "deductible_applied": "deductible_applied",
+    "adjustment_codes": "adjustment_codes",
+    "claim_ordinal": "claim_ordinal",
+    "network_name": "network_name",
+    "coverage_pct": "coverage_pct"
+  }
+}
